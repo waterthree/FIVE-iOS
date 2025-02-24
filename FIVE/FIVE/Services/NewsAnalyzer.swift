@@ -7,6 +7,8 @@
 
 import NaturalLanguage
 
+import NaturalLanguage
+
 class NewsAnalyzer {
     static func combineSimilarEntries(_ entries: [NewsEntry]) -> [NewsEntry] {
         var combinedEntries: [NewsEntry] = []
@@ -16,6 +18,8 @@ class NewsAnalyzer {
             if processedEntries.contains(entry.id) { continue }
             
             let similarEntries = entries.filter { isSimilar($0.title, entry.title) }
+            print("Combining \(similarEntries.count) entries for: \(entry.title)")
+            
             let combinedTitle = entry.title
             let combinedSummary = similarEntries.map { $0.summary }.joined(separator: "\n\n")
             let combinedSource = similarEntries.map { $0.source }.joined(separator: ", ")

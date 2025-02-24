@@ -10,7 +10,7 @@ import FeedKit
 import Combine
 
 class RSSFeedFetcher: ObservableObject {
-    @Published var entries: [NewsEntry] = [] // @Published makes it observable
+    @Published var entries: [NewsEntry] = []
     
     func fetchFeeds(from urls: [String], limit: Int) {
         for url in urls {
@@ -24,12 +24,13 @@ class RSSFeedFetcher: ObservableObject {
                 switch result {
                 case .success(let feed):
                     if let items = feed.rssFeed?.items {
-                        print("Fetched \(items.count) items from \(url)")
+                        print("Fetcher -- Fetched \(items.count) items from \(url)")
                         let newEntries = items.prefix(limit).map { item in
                             NewsEntry(title: item.title ?? "No Title", summary: item.description ?? "No Summary", source: url)
                         }
                         DispatchQueue.main.async {
                             self.entries.append(contentsOf: newEntries)
+                            print("Fetcher -- Updated entries count: \(self.entries.count)")
                         }
                     } else {
                         print("No items found in feed from \(url)")

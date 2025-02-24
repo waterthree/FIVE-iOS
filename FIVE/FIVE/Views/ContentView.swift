@@ -29,14 +29,15 @@ struct ContentView: View {
             .onAppear {
                 let rssURLs = UserDefaults.standard.string(forKey: "rssURLs")?.components(separatedBy: ",") ?? []
                 let fetchLimit = UserDefaults.standard.integer(forKey: "fetchLimit")
+//                print("Fetching feeds from: \(rssURLs)")
                 fetcher.fetchFeeds(from: rssURLs, limit: fetchLimit)
             }
             .onReceive(fetcher.$entries) { entries in
-                print("Fetched \(entries.count) entries")
+//                print("Fetched \(entries.count) entries")
                 let combinedEntries = NewsAnalyzer.combineSimilarEntries(entries)
-                print("Combined entries: \(combinedEntries.count)")
+//                print("Combined entries: \(combinedEntries.count)")
                 topEntries = NewsAnalyzer.rankEntries(combinedEntries)
-                print("Top entries: \(topEntries.count)")
+//                print("Top entries: \(topEntries.count)")
             }
         }
     }
