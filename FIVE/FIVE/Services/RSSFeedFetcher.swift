@@ -12,28 +12,39 @@ import Combine
 class RSSFeedFetcher: ObservableObject {
     @Published var entries: [NewsEntry] = []
     
-    func fetchFeeds(from urls: [String], limit: Int) {
-        for url in urls {
-            guard let feedURL = URL(string: url) else {
-                print("Invalid URL: \(url)")
-                continue
-            }
+    init() {
+        fetchFeeds()
+    }
+    
+    func fetchFeeds() {
+        let rssURLs = UserDefaults.standard.string(forKey: "rssURLs")?.components(separatedBy: ",") ?? []
+        let fetchLimit = UserDefaults.standard.integer(forKey: "fetchLimit")
+        
+        // Clear existing entries before fetching new ones
+        DispatchQueue.main.async {
+            self.entries.removeAll()
+        }
+        
+        for url in rssURLs {
+            guard let feedURL = URL(string: url) else { continue }
             let parser = FeedParser(URL: feedURL)
             
             parser.parseAsync { result in
                 switch result {
                 case .success(let feed):
                     if let items = feed.rssFeed?.items {
-                        print("Fetcher -- Fetched \(items.count) items from \(url)")
-                        let newEntries = items.prefix(limit).map { item in
-                            NewsEntry(title: item.title ?? "No Title", summary: item.description ?? "No Summary", source: url)
+                        let newEntries = items.prefix(fetchLimit).map { item in
+                            NewsEntry(
+                                title: item.title ?? "",    // "" for No Title
+                                summary: item.description ?? "",    // "" for No Summary
+                                sources: [item.guid?.value ?? url], // Single source for each item
+                                combinedCount: 1, // Each item is initially a single entry
+                                date: item.pubDate // Publication date
+                            )
                         }
                         DispatchQueue.main.async {
                             self.entries.append(contentsOf: newEntries)
-                            print("Fetcher -- Updated entries count: \(self.entries.count)")
                         }
-                    } else {
-                        print("No items found in feed from \(url)")
                     }
                 case .failure(let error):
                     print("Error fetching feed from \(url): \(error.localizedDescription)")

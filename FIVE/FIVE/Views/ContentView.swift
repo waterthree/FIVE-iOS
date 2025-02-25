@@ -14,10 +14,30 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             List(topEntries.prefix(5), id: \.id) { entry in
-                VStack(alignment: .leading) {
-                    Text(entry.title).font(.headline)
-                    Text(entry.summary).font(.subheadline)
-                    Text("Source: \(entry.source)").font(.caption)
+                NavigationLink(destination: SourcesView(entry: entry)) {
+                    HStack {
+                        // Entry details (title and summary)
+                        VStack(alignment: .leading) {
+                            Text(entry.title)
+                                .font(.headline)
+                                .lineLimit(3)
+                            
+                            Text(entry.summary)
+                                .font(.footnote)
+                                .lineLimit(2)
+                                .foregroundColor(.gray)
+                        }
+                        
+                        Spacer() // Push the number to the right
+                        
+                        // Display the combinedCount on the right side
+                        Text("\(entry.combinedCount)")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(Color.blue)
+                            .clipShape(Circle())
+                    }
                 }
             }
             .navigationTitle("FIVE")
@@ -26,18 +46,12 @@ struct ContentView: View {
                     Image(systemName: "gear")
                 }
             }
-            .onAppear {
-                let rssURLs = UserDefaults.standard.string(forKey: "rssURLs")?.components(separatedBy: ",") ?? []
-                let fetchLimit = UserDefaults.standard.integer(forKey: "fetchLimit")
-//                print("Fetching feeds from: \(rssURLs)")
-                fetcher.fetchFeeds(from: rssURLs, limit: fetchLimit)
+            .refreshable {
+                fetcher.fetchFeeds()
             }
             .onReceive(fetcher.$entries) { entries in
-//                print("Fetched \(entries.count) entries")
                 let combinedEntries = NewsAnalyzer.combineSimilarEntries(entries)
-//                print("Combined entries: \(combinedEntries.count)")
                 topEntries = NewsAnalyzer.rankEntries(combinedEntries)
-//                print("Top entries: \(topEntries.count)")
             }
         }
     }
